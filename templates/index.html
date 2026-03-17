@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Writing Bot — Personal Style AI</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+/* ── Reset & Variables ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg0:  #0b0d12;
+  --bg1:  #13161e;
+  --bg2:  #1c1f2b;
+  --bg3:  #252838;
+  --border: #2e3145;
+  --border2: #3d4160;
+  --txt:  #dde1f0;
+  --txt2: #8890b0;
+  --txt3: #555d80;
+  --accent: #6c63ff;
+  --accent2: #5b53e0;
+  --accent-glow: rgba(108,99,255,.18);
+  --green: #3ecf8e;
+  --red:   #f05050;
+  --gold:  #f5c842;
+  --radius: 10px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: var(--font);
+  background: var(--bg0);
+  color: var(--txt);
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+header {
+  background: var(--bg1);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--accent), #9c6cff);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+
+.brand-name {
+  font-size: 15px;
+  font-weight: 700;
+  background: linear-gradient(90deg, #fff, var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.brand-badge {
+  font-size: 10px;
+  background: var(--accent-glow);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 1px 6px;
+  border-radius: 20px;
+  font-weight: 600;
+  letter-spacing: .04em;
+}
+
+.header-actions { display: flex; gap: 6px; }
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 7px;
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+  color: var(--txt2);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+.btn-danger:hover { border-color: var(--red); color: var(--red); background: rgba(240,80,80,.1); }
+.btn-icon { padding: 5px 8px; }
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+.layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────────── */
+.sidebar {
+  width: 270px;
+  min-width: 270px;
+  background: var(--bg1);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-block {
+  border-bottom: 1px solid var(--border);
+  padding: 14px 16px;
+}
+
+.sidebar-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--txt3);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Upload zone */
+.upload-zone {
+  border: 2px dashed var(--border2);
+  border-radius: var(--radius);
+  padding: 18px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+}
+.upload-zone input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 1;
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+.upload-zone-icon { font-size: 22px; margin-bottom: 6px; }
+.upload-zone p { font-size: 12px; color: var(--txt2); line-height: 1.4; }
+.upload-zone strong { color: var(--accent); }
+.upload-zone small { font-size: 10px; color: var(--txt3); }
+
+/* Doc list */
+.doc-list {
+  overflow-y: auto;
+  flex: 1;
+  padding: 8px 16px 12px;
+}
+
+.doc-empty {
+  font-size: 12px;
+  color: var(--txt3);
+  text-align: center;
+  padding: 12px 0;
+}
+
+.doc-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  margin-bottom: 4px;
+  background: var(--bg2);
+  transition: border-color .15s;
+}
+.doc-item:hover { border-color: var(--border2); }
+.doc-icon { font-size: 15px; flex-shrink: 0; }
+.doc-meta { flex: 1; min-width: 0; }
+.doc-name {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.doc-size { font-size: 10px; color: var(--txt3); }
+.doc-del {
+  background: none; border: none; color: var(--txt3);
+  cursor: pointer; padding: 2px 4px; border-radius: 4px;
+  font-size: 13px; line-height: 1; flex-shrink: 0;
+  transition: color .15s;
+}
+.doc-del:hover { color: var(--red); }
+
+/* Memory panel */
+.memory-panel {
+  padding: 8px 16px 12px;
+}
+.memory-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--txt2);
+  font-family: var(--mono);
+  max-height: 110px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.memory-empty { color: var(--txt3); font-style: italic; }
+
+/* ── Chat main ───────────────────────────────────────────────────────────── */
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg0);
+}
+
+/* Messages */
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Welcome */
+.welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  text-align: center;
+  padding: 40px;
+}
+.welcome-icon { font-size: 52px; margin-bottom: 16px; }
+.welcome h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.welcome p { color: var(--txt2); font-size: 14px; max-width: 420px; line-height: 1.6; }
+.welcome-tips {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 24px;
+  max-width: 480px;
+  width: 100%;
+}
+.tip-card {
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  text-align: left;
+  font-size: 12px;
+  color: var(--txt2);
+}
+.tip-card strong { display: block; color: var(--txt); margin-bottom: 4px; font-size: 12px; }
+
+/* Message rows */
+.msg {
+  display: flex;
+  gap: 10px;
+  animation: fadeUp .2s ease;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.msg.user { flex-direction: row-reverse; }
+
+.msg-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.user .msg-avatar { background: linear-gradient(135deg, var(--accent), #9c6cff); }
+.assistant .msg-avatar { background: var(--bg3); border: 1px solid var(--border2); }
+
+.msg-body { max-width: min(640px, 72%); display: flex; flex-direction: column; gap: 4px; }
+.user .msg-body { align-items: flex-end; }
+
+.msg-bubble {
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 14px;
+  line-height: 1.65;
+  word-break: break-word;
+}
+.user .msg-bubble {
+  background: var(--bg3);
+  border-color: rgba(108,99,255,.3);
+}
+
+/* Markdown in bubbles */
+.msg-bubble h1, .msg-bubble h2, .msg-bubble h3 {
+  font-size: 1em; font-weight: 600; margin: .4em 0 .2em;
+}
+.msg-bubble p { margin-bottom: .5em; }
+.msg-bubble p:last-child { margin-bottom: 0; }
+.msg-bubble ul, .msg-bubble ol { padding-left: 1.3em; margin-bottom: .5em; }
+.msg-bubble li { margin-bottom: .1em; }
+.msg-bubble code {
+  background: var(--bg3);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: .88em;
+}
+.msg-bubble pre {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 7px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  margin: .5em 0;
+}
+.msg-bubble pre code { background: none; padding: 0; font-size: .85em; }
+.msg-bubble blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 10px;
+  color: var(--txt2);
+  margin: .5em 0;
+}
+.msg-bubble a { color: var(--accent); text-decoration: underline; }
+.msg-bubble strong { font-weight: 600; color: #fff; }
+
+.msg-time {
+  font-size: 10px;
+  color: var(--txt3);
+  padding: 0 4px;
+}
+
+/* Tool indicator */
+.tool-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--gold);
+  background: rgba(245,200,66,.08);
+  border: 1px solid rgba(245,200,66,.2);
+  border-radius: 20px;
+  padding: 2px 10px;
+  margin-bottom: 4px;
+}
+.tool-chip .spin {
+  width: 10px; height: 10px;
+  border: 2px solid rgba(245,200,66,.3);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+.tool-chip.done { color: var(--green); background: rgba(62,207,142,.08); border-color: rgba(62,207,142,.2); }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Thinking indicator */
+.thinking-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--txt2);
+  font-size: 13px;
+  padding: 4px 0;
+}
+.dot-anim { display: flex; gap: 4px; }
+.dot-anim span {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--txt3);
+  animation: pulse 1.3s ease-in-out infinite;
+}
+.dot-anim span:nth-child(2) { animation-delay: .2s; }
+.dot-anim span:nth-child(3) { animation-delay: .4s; }
+@keyframes pulse { 0%,80%,100%{opacity:.2} 40%{opacity:1} }
+
+/* ── Input area ──────────────────────────────────────────────────────────── */
+.input-area {
+  padding: 14px 28px 16px;
+  background: var(--bg1);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.input-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 8px 10px 8px 14px;
+  transition: border-color .2s;
+}
+.input-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+#msgInput {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--txt);
+  font-size: 14px;
+  font-family: inherit;
+  resize: none;
+  max-height: 140px;
+  min-height: 22px;
+  line-height: 1.55;
+}
+#msgInput::placeholder { color: var(--txt3); }
+
+#sendBtn {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  font-size: 17px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background .15s, transform .1s;
+}
+#sendBtn:hover { background: var(--accent2); }
+#sendBtn:active { transform: scale(.93); }
+#sendBtn:disabled { background: var(--bg3); cursor: not-allowed; }
+
+/* Input hint */
+.input-hint {
+  font-size: 11px;
+  color: var(--txt3);
+  margin-top: 6px;
+  padding-left: 2px;
+}
+
+/* ── Status bar ──────────────────────────────────────────────────────────── */
+.statusbar {
+  height: 24px;
+  background: var(--bg1);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 28px;
+  font-size: 11px;
+  color: var(--txt3);
+  flex-shrink: 0;
+}
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  display: inline-block;
+  margin-right: 4px;
+  box-shadow: 0 0 5px var(--green);
+}
+
+/* ── Emotion bar ─────────────────────────────────────────────────────────── */
+.emotion-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 2px 4px;
+  flex-wrap: wrap;
+}
+
+.emotion-label {
+  font-size: 11px;
+  color: var(--txt3);
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  margin-right: 2px;
+  flex-shrink: 0;
+}
+
+.emo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 11px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+  color: var(--txt2);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all .18s;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.emo-btn:hover {
+  border-color: var(--emo-color, var(--accent));
+  color: var(--emo-color, var(--accent));
+  background: color-mix(in srgb, var(--emo-color, var(--accent)) 12%, transparent);
+}
+.emo-btn.active {
+  border-color: var(--emo-color, var(--accent));
+  color: var(--emo-color, var(--accent));
+  background: color-mix(in srgb, var(--emo-color, var(--accent)) 18%, transparent);
+  font-weight: 700;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--emo-color, var(--accent)) 30%, transparent);
+}
+
+/* Emotion badge on message bubbles */
+.msg-emo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-bottom: 5px;
+  border: 1px solid;
+  opacity: .85;
+}
+
+/* Status bar emotion chip */
+.stat-emo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 0 8px;
+  border-radius: 20px;
+  border: 1px solid;
+}
+
+/* ── Modal ───────────────────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.65);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+  animation: fadeIn .15s ease;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+.modal {
+  background: var(--bg1);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  width: 620px;
+  max-width: 94vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  animation: slideUp .18s ease;
+}
+@keyframes slideUp { from{transform:translateY(10px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-title { font-size: 15px; font-weight: 700; }
+.modal-close {
+  background: none; border: none; color: var(--txt2);
+  cursor: pointer; font-size: 18px; line-height: 1;
+  padding: 2px 6px; border-radius: 5px;
+  transition: color .15s;
+}
+.modal-close:hover { color: var(--txt); }
+
+.modal-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Memory modal */
+.mem-file {
+  margin-bottom: 14px;
+}
+.mem-file-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold);
+  font-family: var(--mono);
+  margin-bottom: 5px;
+  display: flex; align-items: center; gap: 6px;
+}
+.mem-file-content {
+  background: var(--bg0);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 10px 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--txt2);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.mem-empty { color: var(--txt3); font-style: italic; text-align: center; padding: 20px 0; }
+
+/* Transcript modal */
+.tx-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  margin-bottom: 5px;
+  background: var(--bg2);
+  cursor: default;
+  transition: border-color .15s;
+}
+.tx-item:hover { border-color: var(--border2); }
+.tx-icon { font-size: 18px; }
+.tx-meta { flex: 1; min-width: 0; }
+.tx-time { font-size: 12px; font-weight: 600; }
+.tx-info { font-size: 11px; color: var(--txt3); }
+.tx-badge {
+  font-size: 10px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  color: var(--txt2);
+  border-radius: 20px;
+  padding: 2px 8px;
+}
+
+/* ── Toast ───────────────────────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 28px; right: 28px;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 9px;
+  padding: 10px 16px;
+  font-size: 13px;
+  z-index: 200;
+  animation: slideUp .2s ease;
+  max-width: 320px;
+}
+.toast.ok  { border-color: var(--green); color: var(--green); }
+.toast.err { border-color: var(--red);   color: var(--red);   }
+
+/* ── Upload progress ─────────────────────────────────────────────────────── */
+.upload-progress {
+  height: 3px;
+  background: var(--border);
+  border-radius: 3px;
+  margin-top: 8px;
+  overflow: hidden;
+  display: none;
+}
+.upload-progress.active { display: block; }
+.upload-bar {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width .3s;
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+  0%   { opacity: 1; }
+  50%  { opacity: .6; }
+  100% { opacity: 1; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────────────────── -->
+<header>
+  <div class="header-brand">
+    <div class="brand-icon">✍</div>
+    <span class="brand-name">Writing Bot</span>
+    <span class="brand-badge">Claude Opus 4.6</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn" onclick="openMemoryModal()">🧠 Memory</button>
+    <button class="btn" onclick="openTranscriptsModal()">📂 Transcripts</button>
+    <button class="btn btn-danger" onclick="clearChat()">🗑 Clear Chat</button>
+  </div>
+</header>
+
+<!-- ── Layout ──────────────────────────────────────────────────────────── -->
+<div class="layout">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+
+    <!-- Upload -->
+    <div class="sidebar-block">
+      <div class="sidebar-label">Upload Context</div>
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" multiple
+          accept=".txt,.md,.pdf,.docx,.csv,.json,.html,.py,.js,.ts,.jsx,.tsx,.yaml,.yml,.log"
+          onchange="handleFileInput(this.files)">
+        <div class="upload-zone-icon">📄</div>
+        <p><strong>Click or drag &amp; drop</strong></p>
+        <p>PDF, DOCX, TXT, MD, JSON, CSV…</p>
+        <small>Files become context for the bot</small>
+      </div>
+      <div class="upload-progress" id="uploadProgress">
+        <div class="upload-bar" id="uploadBar"></div>
+      </div>
+    </div>
+
+    <!-- Doc list -->
+    <div class="sidebar-block" style="padding-bottom:6px">
+      <div class="sidebar-label">
+        Documents
+        <span id="docCount" style="color:var(--txt2);font-weight:600;font-size:11px">0</span>
+      </div>
+    </div>
+    <div class="doc-list" id="docList">
+      <div class="doc-empty">No documents yet</div>
+    </div>
+
+    <!-- Memory preview -->
+    <div class="sidebar-block" style="padding-bottom:6px">
+      <div class="sidebar-label">
+        Memory
+        <button class="btn btn-icon" style="font-size:10px;padding:2px 7px" onclick="openMemoryModal()">view all</button>
+      </div>
+    </div>
+    <div class="memory-panel">
+      <div class="memory-box" id="memPreview">
+        <span class="memory-empty">No memory files yet</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Chat main -->
+  <div class="chat-main">
+
+    <!-- Messages -->
+    <div class="messages" id="messages">
+      <div class="welcome" id="welcome">
+        <div class="welcome-icon">✍️</div>
+        <h2>Your Personal Writing Bot</h2>
+        <p>I learn your writing style as we chat, and remember it across sessions using persistent memory. Upload documents to add context from your existing writing.</p>
+        <div class="welcome-tips">
+          <div class="tip-card">
+            <strong>📄 Upload docs</strong>
+            Drop any files — essays, notes, code, PDFs — to give me your knowledge base.
+          </div>
+          <div class="tip-card">
+            <strong>✍️ Write naturally</strong>
+            Just chat. I'll pick up your tone, vocabulary, and style automatically.
+          </div>
+          <div class="tip-card">
+            <strong>🧠 Persistent memory</strong>
+            I store what I learn about your style in memory files that persist forever.
+          </div>
+          <div class="tip-card">
+            <strong>📂 Transcripts</strong>
+            Every session is auto-saved in the <code>transcripts/</code> folder.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="input-area">
+      <div class="input-wrap">
+        <textarea id="msgInput"
+          placeholder="Send a message… (Enter to send, Shift+Enter for newline)"
+          rows="1"
+          onkeydown="handleKey(event)"
+          oninput="autoGrow(this)"></textarea>
+        <button id="sendBtn" onclick="sendMessage()" title="Send (Enter)">↑</button>
+      </div>
+      <!-- Emotion mode selector — populated from /api/skillsets -->
+      <div class="emotion-bar" id="emotionBar">
+        <span class="emotion-label">Mode:</span>
+        <button class="emo-btn active" id="emo-normal"
+          style="--emo-color:var(--accent)"
+          onclick="setMode(null)">🖊 Normal</button>
+      </div>
+      <div class="input-hint">
+        Select an emotion mode to rewrite responses in that emotional voice.
+      </div>
+    </div>
+
+    <!-- Status bar -->
+    <div class="statusbar">
+      <span><span class="status-dot"></span>Connected</span>
+      <span id="statSession">Session: –</span>
+      <span id="statMsgs">0 messages</span>
+      <span id="statDocs">0 docs</span>
+      <span id="statMode" style="display:none"></span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Memory Modal ─────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="memModal" style="display:none" onclick="closeModal('memModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title">🧠 Memory Files</span>
+      <button class="modal-close" onclick="closeModal('memModal')">×</button>
+    </div>
+    <div class="modal-body" id="memModalBody">
+      <div class="mem-empty">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Transcripts Modal ────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="txModal" style="display:none" onclick="closeModal('txModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title">📂 Chat Transcripts</span>
+      <button class="modal-close" onclick="closeModal('txModal')">×</button>
+    </div>
+    <div class="modal-body" id="txModalBody">
+      <div class="mem-empty">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────────────────
+marked.setOptions({ breaks: true, gfm: true });
+
+// ── State ───────────────────────────────────────────────────────────────────
+let streaming       = false;
+let msgCount        = 0;
+let sessionId       = '–';
+let activeSkillset  = null;   // null = Normal; string key = emotion mode
+let skillsets       = [];     // [{id,name,icon,color,tag,description}]
+
+// ── Textarea auto-grow ───────────────────────────────────────────────────────
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+// ── File upload ──────────────────────────────────────────────────────────────
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('drag-over');
+  handleFileInput(e.dataTransfer.files);
+});
+
+async function handleFileInput(files) {
+  for (const f of files) await uploadFile(f);
+}
+
+async function uploadFile(file) {
+  const prog = document.getElementById('uploadProgress');
+  const bar  = document.getElementById('uploadBar');
+  prog.classList.add('active');
+  bar.style.width = '30%';
+
+  const fd = new FormData();
+  fd.append('file', file);
+
+  try {
+    bar.style.width = '70%';
+    const res  = await fetch('/api/upload', { method: 'POST', body: fd });
+    const data = await res.json();
+    bar.style.width = '100%';
+
+    if (data.error) {
+      toast(data.error, 'err');
+    } else {
+      toast(`✓ Uploaded: ${data.name} (${fmtChars(data.chars)})`, 'ok');
+      refreshDocs();
+    }
+  } catch {
+    toast('Upload failed — check console', 'err');
+  } finally {
+    setTimeout(() => {
+      prog.classList.remove('active');
+      bar.style.width = '0%';
+    }, 600);
+  }
+}
+
+// ── Doc list ─────────────────────────────────────────────────────────────────
+async function refreshDocs() {
+  const res  = await fetch('/api/documents');
+  const docs = await res.json();
+
+  document.getElementById('docCount').textContent = docs.length;
+  document.getElementById('statDocs').textContent = `${docs.length} doc${docs.length !== 1 ? 's' : ''}`;
+
+  const list = document.getElementById('docList');
+  if (docs.length === 0) {
+    list.innerHTML = '<div class="doc-empty">No documents yet</div>';
+    return;
+  }
+  list.innerHTML = docs.map(d => `
+    <div class="doc-item">
+      <span class="doc-icon">${fileIcon(d.name)}</span>
+      <div class="doc-meta">
+        <div class="doc-name" title="${esc(d.name)}">${esc(d.name)}</div>
+        <div class="doc-size">${fmtChars(d.chars)}</div>
+      </div>
+      <button class="doc-del" onclick="delDoc('${d.id}')" title="Remove">✕</button>
+    </div>
+  `).join('');
+}
+
+async function delDoc(id) {
+  await fetch(`/api/documents/${id}`, { method: 'DELETE' });
+  refreshDocs();
+  toast('Document removed', 'ok');
+}
+
+function fileIcon(name) {
+  const e = name.split('.').pop().toLowerCase();
+  const m = { pdf:'📑', docx:'📝', doc:'📝', txt:'📄', md:'📋',
+              py:'🐍', js:'📜', ts:'📜', jsx:'📜', tsx:'📜',
+              json:'🔧', csv:'📊', html:'🌐', yml:'⚙️', yaml:'⚙️', log:'🗒️' };
+  return m[e] || '📄';
+}
+
+function fmtChars(n) {
+  if (n >= 1_000_000) return (n/1_000_000).toFixed(1) + 'M chars';
+  if (n >= 1_000)     return (n/1_000).toFixed(1) + 'k chars';
+  return n + ' chars';
+}
+
+// ── Skillsets / Emotion modes ────────────────────────────────────────────────
+async function loadSkillsets() {
+  try {
+    const res = await fetch('/api/skillsets');
+    skillsets = await res.json();
+
+    const bar = document.getElementById('emotionBar');
+    // Remove any previously injected emotion buttons (keep Normal)
+    bar.querySelectorAll('.emo-btn:not(#emo-normal)').forEach(b => b.remove());
+
+    for (const sk of skillsets) {
+      const btn = document.createElement('button');
+      btn.className = 'emo-btn';
+      btn.id = `emo-${sk.id}`;
+      btn.style.setProperty('--emo-color', sk.color);
+      btn.textContent = `${sk.icon} ${sk.name}`;
+      btn.title = sk.description;
+      btn.onclick = () => setMode(sk.id);
+      bar.appendChild(btn);
+    }
+  } catch { /* server might not be up yet */ }
+}
+
+function setMode(key) {
+  activeSkillset = key;
+
+  // Update button active states
+  document.querySelectorAll('.emo-btn').forEach(b => b.classList.remove('active'));
+  const target = document.getElementById(key ? `emo-${key}` : 'emo-normal');
+  if (target) target.classList.add('active');
+
+  // Update status bar chip
+  const chip = document.getElementById('statMode');
+  if (!key) {
+    chip.style.display = 'none';
+  } else {
+    const sk = skillsets.find(s => s.id === key);
+    if (sk) {
+      chip.style.display = 'inline-flex';
+      chip.className = 'stat-emo';
+      chip.style.color  = sk.color;
+      chip.style.borderColor = sk.color;
+      chip.style.background  = `color-mix(in srgb, ${sk.color} 12%, transparent)`;
+      chip.textContent = `${sk.icon} ${sk.name} mode`;
+    }
+  }
+}
+
+// ── Memory preview (sidebar) ──────────────────────────────────────────────────
+async function refreshMemory() {
+  const res = await fetch('/api/memory');
+  const mem = await res.json();
+
+  const box = document.getElementById('memPreview');
+  const files = Object.keys(mem);
+  if (files.length === 0) {
+    box.innerHTML = '<span class="memory-empty">No memory files yet</span>';
+    return;
+  }
+  let html = '';
+  for (const f of files) {
+    const content = mem[f].trim();
+    const preview = content.length > 120 ? content.slice(0, 120) + '…' : content;
+    html += `<b style="color:var(--gold)">${esc(f)}</b>\n${esc(preview)}\n\n`;
+  }
+  box.textContent = html.trim();
+}
+
+// ── Send message ─────────────────────────────────────────────────────────────
+async function sendMessage() {
+  if (streaming) return;
+
+  const input = document.getElementById('msgInput');
+  const text  = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  autoGrow(input);
+
+  // Remove welcome screen
+  document.getElementById('welcome')?.remove();
+
+  streaming = true;
+  document.getElementById('sendBtn').disabled = true;
+
+  // User bubble
+  addBubble('user', text);
+  msgCount++;
+
+  // Assistant bubble (streaming target)
+  const assistDiv = addBubble('assistant', '', true);
+  const bubble    = assistDiv.querySelector('.msg-bubble');
+  let   fullText  = '';
+
+  try {
+    const resp = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, skillset: activeSkillset }),
+    });
+
+    const reader  = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let   buf     = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+
+      const parts = buf.split('\n\n');
+      buf = parts.pop();
+
+      for (const part of parts) {
+        if (!part.startsWith('data: ')) continue;
+        try {
+          const ev = JSON.parse(part.slice(6));
+          handleEvent(ev, bubble, assistDiv);
+          if (ev.type === 'text') fullText += ev.content;
+          if (ev.type === 'done') sessionId = ev.session_id;
+        } catch { /* ignore malformed SSE chunk */ }
+      }
+    }
+
+  } catch (err) {
+    bubble.textContent = 'Error: ' + err.message;
+  } finally {
+    // Finalise — render markdown, remove thinking indicator
+    assistDiv.querySelector('.thinking-row')?.remove();
+
+    if (fullText) {
+      // Replace plain text span with rendered markdown
+      const span = bubble.querySelector('.raw-text');
+      if (span) span.remove();
+      const md = document.createElement('div');
+      md.innerHTML = marked.parse(fullText);
+      bubble.appendChild(md);
+    }
+
+    msgCount++;
+    streaming = false;
+    document.getElementById('sendBtn').disabled = false;
+    updateStatus();
+    refreshMemory();
+    scrollBottom();
+  }
+}
+
+function handleEvent(ev, bubble, row) {
+  if (ev.type === 'text') {
+    // Remove thinking indicator on first text
+    row.querySelector('.thinking-row')?.remove();
+
+    let span = bubble.querySelector('.raw-text');
+    if (!span) {
+      span = document.createElement('span');
+      span.className = 'raw-text';
+      span.style.whiteSpace = 'pre-wrap';
+      bubble.appendChild(span);
+    }
+    span.textContent += ev.content;
+    scrollBottom();
+
+  } else if (ev.type === 'tool_start') {
+    // Show "using memory" chip
+    const chip = document.createElement('div');
+    chip.className = 'tool-chip';
+    chip.id = 'active-tool';
+    chip.innerHTML = `<div class="spin"></div> reading/writing memory…`;
+    bubble.parentElement.insertBefore(chip, bubble);
+
+  } else if (ev.type === 'tool_done') {
+    const chip = document.getElementById('active-tool');
+    if (chip) {
+      chip.classList.add('done');
+      chip.innerHTML = `✓ memory ${ev.cmd}`;
+      chip.removeAttribute('id');
+      setTimeout(() => chip.remove(), 2500);
+    }
+
+  } else if (ev.type === 'mode') {
+    // Attach a small emotion badge to the top of the assistant bubble
+    const existing = row.querySelector('.msg-emo-badge');
+    if (!existing) {
+      const badge = document.createElement('div');
+      badge.className = 'msg-emo-badge';
+      badge.style.color       = ev.color;
+      badge.style.borderColor = ev.color;
+      badge.style.background  = `color-mix(in srgb, ${ev.color} 12%, transparent)`;
+      badge.textContent = `${ev.icon} ${ev.name}`;
+      // Insert before the bubble inside msg-body
+      bubble.parentElement.insertBefore(badge, bubble);
+    }
+
+  } else if (ev.type === 'error') {
+    row.querySelector('.thinking-row')?.remove();
+    bubble.innerHTML = `<span style="color:var(--red)">⚠ ${esc(ev.content)}</span>`;
+  }
+}
+
+// ── DOM helpers ───────────────────────────────────────────────────────────────
+function addBubble(role, text, isStreaming = false) {
+  const msgs = document.getElementById('messages');
+  const row  = document.createElement('div');
+  row.className = `msg ${role}`;
+
+  const avatar = role === 'user' ? '👤' : '✍️';
+  const time   = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+
+  row.innerHTML = `
+    <div class="msg-avatar">${avatar}</div>
+    <div class="msg-body">
+      ${isStreaming ? '<div class="thinking-row">Writing<div class="dot-anim"><span></span><span></span><span></span></div></div>' : ''}
+      <div class="msg-bubble">${text ? esc(text) : ''}</div>
+      <div class="msg-time">${time}</div>
+    </div>
+  `;
+
+  msgs.appendChild(row);
+  scrollBottom();
+  return row;
+}
+
+function scrollBottom() {
+  const m = document.getElementById('messages');
+  m.scrollTop = m.scrollHeight;
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ── Status ────────────────────────────────────────────────────────────────────
+function updateStatus() {
+  document.getElementById('statSession').textContent = `Session: ${sessionId}`;
+  document.getElementById('statMsgs').textContent    = `${msgCount} messages`;
+}
+
+// ── Clear chat ────────────────────────────────────────────────────────────────
+async function clearChat() {
+  if (!confirm('Clear conversation? The current transcript will be saved first.')) return;
+  await fetch('/api/clear', { method: 'POST' });
+
+  const msgs = document.getElementById('messages');
+  msgs.innerHTML = `
+    <div class="welcome" id="welcome">
+      <div class="welcome-icon">✍️</div>
+      <h2>Chat cleared</h2>
+      <p>Start a new conversation. Your memory and uploaded documents are preserved.</p>
+    </div>
+  `;
+  msgCount = 0;
+  sessionId = '–';
+  updateStatus();
+  toast('Chat cleared — transcript saved', 'ok');
+}
+
+// ── Memory modal ──────────────────────────────────────────────────────────────
+async function openMemoryModal() {
+  document.getElementById('memModal').style.display = 'flex';
+  const body = document.getElementById('memModalBody');
+  body.innerHTML = '<div class="mem-empty">Loading…</div>';
+
+  const res = await fetch('/api/memory');
+  const mem = await res.json();
+  const files = Object.keys(mem);
+
+  if (files.length === 0) {
+    body.innerHTML = '<div class="mem-empty">No memory files yet. Chat a bit and the bot will start building its knowledge of your style.</div>';
+    return;
+  }
+
+  body.innerHTML = files.map(f => `
+    <div class="mem-file">
+      <div class="mem-file-name">📄 ${esc(f)}</div>
+      <div class="mem-file-content">${esc(mem[f])}</div>
+    </div>
+  `).join('');
+}
+
+// ── Transcripts modal ─────────────────────────────────────────────────────────
+async function openTranscriptsModal() {
+  document.getElementById('txModal').style.display = 'flex';
+  const body = document.getElementById('txModalBody');
+  body.innerHTML = '<div class="mem-empty">Loading…</div>';
+
+  const res  = await fetch('/api/transcripts');
+  const txs  = await res.json();
+
+  if (txs.length === 0) {
+    body.innerHTML = '<div class="mem-empty">No transcripts yet. They\'re saved automatically after each message.</div>';
+    return;
+  }
+
+  body.innerHTML = `
+    <p style="font-size:12px;color:var(--txt3);margin-bottom:12px">
+      Saved in <code style="color:var(--txt2)">./transcripts/</code> as JSON files.
+    </p>
+  ` + txs.map(t => {
+    const dt = t.timestamp ? new Date(t.timestamp).toLocaleString() : '–';
+    return `
+      <div class="tx-item">
+        <span class="tx-icon">💬</span>
+        <div class="tx-meta">
+          <div class="tx-time">${esc(dt)}</div>
+          <div class="tx-info">${t.file}</div>
+        </div>
+        <span class="tx-badge">${t.messages} msg${t.messages !== 1 ? 's' : ''}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+// ── Toast notifications ───────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, type = '') {
+  const existing = document.querySelector('.toast');
+  existing?.remove();
+
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.remove(), 3500);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+refreshDocs();
+refreshMemory();
+loadSkillsets();
+setInterval(refreshMemory, 12_000);
+updateStatus();
+document.getElementById('msgInput').focus();
+</script>
+</body>
+</html>
