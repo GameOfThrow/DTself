@@ -9,6 +9,9 @@ import json
 import uuid
 from datetime import datetime
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from flask import Flask, request, jsonify, render_template, Response, stream_with_context
 import anthropic
 
