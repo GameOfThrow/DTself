@@ -41,10 +41,8 @@ uploaded_documents: dict[str, dict] = {}
 current_session_id: str = str(uuid.uuid4())[:8]
 current_transcript: list[dict] = []
 
-# Claude client — beta header sent with every request for memory tool support
-client = anthropic.Anthropic(
-    default_headers={"anthropic-beta": "context-management-2025-06-27"},
-)
+MODEL = os.environ.get("BOT_MODEL", "claude-sonnet-4-6")
+client = anthropic.Anthropic(max_retries=4)
 
 # ── System prompt ─────────────────────────────────────────────────────────────
 SYSTEM_PROMPT = """You are a personal AI that has been trained to understand, embody, \
@@ -79,6 +77,13 @@ terminology, incorporate their ideas, and write in the same spirit as those docu
 - Don't explain that you're mimicking them — just DO it
 - When asked to draft something, write it exactly as they would write it
 - Match their level of directness and brevity (or verbosity)
+
+**5 — Keep responses short and conversational.**
+- Default to brief, natural replies — the length of a text message or a quick chat response
+- Never pad, over-explain, or list things that don't need listing
+- If a topic is complex, summarise the key point and let the user ask for more
+- Long answers should be the exception, not the rule
+- Match the energy of the message: a one-liner question gets a one-liner answer
 
 Begin every new conversation by reading your memory to restore context about this user."""
 
@@ -337,7 +342,7 @@ def save_transcript():
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", model=MODEL)
 
 
 @app.route("/api/chat", methods=["POST"])
@@ -347,6 +352,7 @@ def chat():
     data = request.json or {}
     user_message = data.get("message", "").strip()
     active_skillset = data.get("skillset") or None  # e.g. "angry", "sad", "happy", "productive"
+    active_model = data.get("model") or MODEL
     if not user_message:
         return jsonify({"error": "Empty message"}), 400
 
@@ -377,11 +383,62 @@ def chat():
             max_iterations = 10
             for iteration in range(max_iterations):
                 with client.messages.stream(
-                    model="claude-opus-4-6",
+                    model=active_model,
                     max_tokens=4096,
                     system=system,
                     messages=messages,
-                    tools=[{"type": "memory_20250818", "name": "memory"}],
+                    tools=[{
+                        "name": "memory",
+                        "description": (
+                            "Read and write persistent memory files to store observations about "
+                            "the user's writing style, vocabulary, tone, preferences, and topic knowledge. "
+                            "Use this to build and update a profile across sessions. "
+                            "Files are stored in the ./memory/ directory."
+                        ),
+                        "input_schema": {
+                            "type": "object",
+                            "properties": {
+                                "command": {
+                                    "type": "string",
+                                    "enum": ["view", "create", "str_replace", "insert", "delete", "rename"],
+                                    "description": "Operation to perform on memory files.",
+                                },
+                                "path": {
+                                    "type": "string",
+                                    "description": "Filename within the memory directory, e.g. 'writing_style.md' or 'topics.md'.",
+                                },
+                                "file_text": {
+                                    "type": "string",
+                                    "description": "Full content to write when using the create command.",
+                                },
+                                "old_str": {
+                                    "type": "string",
+                                    "description": "Exact string to find and replace (str_replace command).",
+                                },
+                                "new_str": {
+                                    "type": "string",
+                                    "description": "Replacement string for str_replace, or text to insert for insert command.",
+                                },
+                                "insert_line": {
+                                    "type": "integer",
+                                    "description": "Line index at which to insert new_str (insert command).",
+                                },
+                                "start_line": {
+                                    "type": "integer",
+                                    "description": "First line index to delete (delete command). Omit to delete the whole file.",
+                                },
+                                "end_line": {
+                                    "type": "integer",
+                                    "description": "Last line index to delete, exclusive (delete command).",
+                                },
+                                "new_path": {
+                                    "type": "string",
+                                    "description": "New filename for the rename command.",
+                                },
+                            },
+                            "required": ["command", "path"],
+                        },
+                    }],
                 ) as stream:
                     for event in stream:
                         # Signal when memory tool is invoked
@@ -576,8 +633,8 @@ def clear():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    print(f"\n✍  Writing Bot  →  http://localhost:{port}")
-    print(f"   Transcripts  →  ./{TRANSCRIPTS_DIR}/")
-    print(f"   Memory       →  ./{MEMORY_DIR}/")
+    print(f"\n  Writing Bot  ->  http://localhost:{port}")
+    print(f"  Transcripts  ->  ./{TRANSCRIPTS_DIR}/")
+    print(f"  Memory       ->  ./{MEMORY_DIR}/")
     print(f"\n   Ensure ANTHROPIC_API_KEY is set in your environment.\n")
     app.run(debug=True, port=port, threaded=True)

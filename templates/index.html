@@ -708,6 +708,36 @@ header {
   50%  { opacity: .6; }
   100% { opacity: 1; }
 }
+
+/* ── Model selector ──────────────────────────────────────────────────────── */
+.model-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  color: var(--txt2);
+  border-radius: 7px;
+  padding: 5px 28px 5px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  transition: border-color .15s, color .15s, background .15s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238890b0'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  background-size: 8px;
+  min-width: 130px;
+}
+.model-select:hover, .model-select:focus {
+  border-color: var(--accent);
+  color: var(--accent);
+  background-color: var(--accent-glow);
+}
+.model-select option {
+  background: #1c1f2b;
+  color: #dde1f0;
+}
 </style>
 </head>
 <body>
@@ -717,9 +747,14 @@ header {
   <div class="header-brand">
     <div class="brand-icon">✍</div>
     <span class="brand-name">Writing Bot</span>
-    <span class="brand-badge">Claude Opus 4.6</span>
+    <span class="brand-badge" id="modelBadge">Claude Sonnet 4.6</span>
   </div>
   <div class="header-actions">
+    <select id="modelSelect" class="model-select" onchange="setModel(this.value)" title="Select Claude model">
+      <option value="claude-opus-4-6">Opus 4.6</option>
+      <option value="claude-sonnet-4-6">Sonnet 4.6</option>
+      <option value="claude-haiku-4-5">Haiku 4.5</option>
+    </select>
     <button class="btn" onclick="openMemoryModal()">🧠 Memory</button>
     <button class="btn" onclick="openTranscriptsModal()">📂 Transcripts</button>
     <button class="btn btn-danger" onclick="clearChat()">🗑 Clear Chat</button>
@@ -875,6 +910,19 @@ let msgCount        = 0;
 let sessionId       = '–';
 let activeSkillset  = null;   // null = Normal; string key = emotion mode
 let skillsets       = [];     // [{id,name,icon,color,tag,description}]
+let activeModel     = '{{ model }}';  // synced from server default
+
+const MODEL_LABELS = {
+  'claude-opus-4-6':   'Claude Opus 4.6',
+  'claude-sonnet-4-6': 'Claude Sonnet 4.6',
+  'claude-haiku-4-5':  'Claude Haiku 4.5',
+};
+function modelLabel(id) { return MODEL_LABELS[id] || id; }
+
+function setModel(id) {
+  activeModel = id;
+  document.getElementById('modelBadge').textContent = modelLabel(id);
+}
 
 // ── Textarea auto-grow ───────────────────────────────────────────────────────
 function autoGrow(el) {
@@ -1074,7 +1122,7 @@ async function sendMessage() {
     const resp = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text, skillset: activeSkillset }),
+      body: JSON.stringify({ message: text, skillset: activeSkillset, model: activeModel }),
     });
 
     const reader  = resp.body.getReader();
@@ -1317,6 +1365,9 @@ loadSkillsets();
 setInterval(refreshMemory, 12_000);
 updateStatus();
 document.getElementById('msgInput').focus();
+// Sync dropdown + badge to server's default model
+document.getElementById('modelSelect').value = activeModel;
+document.getElementById('modelBadge').textContent = modelLabel(activeModel);
 </script>
 </body>
 </html>
